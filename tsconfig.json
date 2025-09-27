@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    /* Base Options */
+    "target": "es2022",
+    "module": "ESNext",
+    "lib": ["es2022"],
+    
+    /* Strict Type-Checking */
+    "strict": true,
+
+    /* Module Resolution */
+    "moduleResolution": "node",
+
+    /* Source Maps */
+    "sourceMap": false, // Disabled source map generation.
+
+    /* Emitting Files */
+    "noEmitOnError": true,
+    
+    /* Project Structure */
+    "rootDir": "./src",      // All your TypeScript source code will be in the 'src' folder.
+    "outDir": "./scripts"  // All compiled JavaScript will go into the 'scripts' folder.
+  },
+  "include": [
+    "./src/**/*.ts",      // Only compile .ts files found within the 'src' directory.
+    "./point_script.d.ts" // Still include the CS2 API definitions for type-checking.
+  ]
+}
