@@ -1,30 +1,85 @@
-import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController, Vector, QAngle, Entity } from "cs_script/point_script";
+import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController, Vector, QAngle, Entity, EntityDamage } from "cs_script/point_script";
 
 // An enum to define the current phase of the game
 export enum GamePhase {
-    MAIN = "MAIN",
-    ARMAGEDDON = "ARMAGEDDON",
+    e_MAIN = "MAIN",
+    e_ARMAGEDDON = "ARMAGEDDON",
 }
 
 // An enum to define the different types of damage
 export enum DamageType {
-    PHYSICAL = "PHYSICAL",
-    FIRE = "FIRE",
-    LIGHTNING = "LIGHTNING",
-    POISON = "POISON",
-    AOE_EXPLOSIVE = "AOE_EXPLOSIVE",
+    e_PHYSICAL = "PHYSICAL",
+    e_FIRE = "FIRE",
+    e_LIGHTNING = "LIGHTNING",
+    e_POISON = "POISON",
+    e_AOE_EXPLOSIVE = "AOE_EXPLOSIVE",
+}
+
+export enum TroopType {
+    e_DOOR = "DOOR",
+    e_VASE = "VASE",
+    e_STATUE = "STATUE",
+    e_GALLON = "GALLON",
+    e_LITER = "LITER",
+    e_FLOWER = "FLOWER",
+}
+
+
+export class CTrackTrain {
+    // A property to hold the actual entity handle from the game engine
+    private m_entityHandle: Entity;
+
+    constructor(entity: Entity) {
+        this.m_entityHandle = entity;
+    }
+
+    /**
+     * Teleports the train to a path node and starts it moving at a specified speed.
+     */
+    public teleportToPathAndStart(teleportToNode: Entity, speedValue: number): void {
+        const pathNodeName = teleportToNode.GetEntityName();
+        Instance.EntFireAtTarget({ target: this.m_entityHandle, input: "TeleportToPathNode", value: pathNodeName });
+        this.setSpeed(speedValue);
+        Instance.EntFireAtTarget({ target: this.m_entityHandle, input: "StartForward" });
+    }
+
+    /**
+     * Sets the speed of the train.
+     */
+    public setSpeed(speedValue: number): void {
+        Instance.EntFireAtTarget({ target: this.m_entityHandle, input: "SetSpeedReal", value: speedValue });
+    }
+}
+
+export class CPropPhysicsMultiplayer {
+    // A property to hold the actual entity handle from the game engine
+    private m_entityHandle: Entity;
+
+    constructor(entity: Entity) {
+        this.m_entityHandle = entity;
+    }
+}
+
+export class CTroop {
+    private m_trackTrain: CTrackTrain;
+    private m_propPhysicsMultiplayer: CPropPhysicsMultiplayer;
+
+    constructor(trackTrain: CTrackTrain, propPhysicsMultiplayer: CPropPhysicsMultiplayer) {
+        this.m_propPhysicsMultiplayer = propPhysicsMultiplayer;
+        this.m_trackTrain = trackTrain;
+    }
 }
 
 // A class to hold references to map entities
-export class MapEntities {
-    doorTemplate: PointTemplate;
-    vaseTemplate: PointTemplate;
-    statueTemplate: PointTemplate;
-    gallonTemplate: PointTemplate;
-    literTemplate: PointTemplate;
-    flowerTemplate: PointTemplate;
-    ctPaths: Map<string, Entity[]>;
-    tPaths: Map<string, Entity[]>;
+export class CMapEntities {
+    m_doorTemplate: PointTemplate;
+    m_vaseTemplate: PointTemplate;
+    m_statueTemplate: PointTemplate;
+    m_gallonTemplate: PointTemplate;
+    m_literTemplate: PointTemplate;
+    m_flowerTemplate: PointTemplate;
+    m_ctPaths: Map<string, Entity[]>;
+    m_tPaths: Map<string, Entity[]>;
 
     constructor() {
         // Helper function to find and validate a PointTemplate entity
@@ -38,20 +93,20 @@ export class MapEntities {
         };
 
         // Find and assign the point_template entities from the map
-        this.doorTemplate = findTemplate("template.troop.door");
-        this.vaseTemplate = findTemplate("template.troop.vase");
-        this.statueTemplate = findTemplate("template.troop.statue");
-        this.gallonTemplate = findTemplate("template.troop.gallon");
-        this.literTemplate = findTemplate("template.troop.liter");
-        this.flowerTemplate = findTemplate("template.troop.flower");
+        this.m_doorTemplate = findTemplate("template.troop.door");
+        this.m_vaseTemplate = findTemplate("template.troop.vase");
+        this.m_statueTemplate = findTemplate("template.troop.statue");
+        this.m_gallonTemplate = findTemplate("template.troop.gallon");
+        this.m_literTemplate = findTemplate("template.troop.liter");
+        this.m_flowerTemplate = findTemplate("template.troop.flower");
 
-        this.ctPaths = new Map<string, Entity[]>();
-        this.tPaths = new Map<string, Entity[]>();
+        this.m_ctPaths = new Map<string, Entity[]>();
+        this.m_tPaths = new Map<string, Entity[]>();
         const teams = ['ct', 't'];
         const letters = ['a', 'b', 'c', 'd', 'e', 'f'];
 
         for (const team of teams) {
-            const currentMap = team === 'ct' ? this.ctPaths : this.tPaths;
+            const currentMap = team === 'ct' ? this.m_ctPaths : this.m_tPaths;
             for (const letter of letters) {
                 const pathArray: Entity[] = [];
                 for (let i = 1; i <= 48; i++) {
@@ -79,30 +134,32 @@ function spawnEntityAt(template: PointTemplate, spawnNode: Entity, name: string)
     const spawnedEntities = template.ForceSpawn();
     if (spawnedEntities) {
         const trainName = `train.${name}`;
-        const train = spawnedEntities.find(e => e.GetEntityName() === trainName);
-
-        if (train) {
-            const pathNodeName = spawnNode.GetEntityName();
-            Instance.EntFireAtTarget({ target: train, input: "TeleportToPathNode", value: pathNodeName });
-            Instance.EntFireAtTarget({ target: train, input: "SetSpeedReal", value: 100 });
-            Instance.EntFireAtTarget({ target: train, input: "StartForward" });
+        const trainEntity = spawnedEntities.find(e => e.GetEntityName() === trainName);
+        if (trainEntity) {
+            // 1. Create a new instance of your wrapper class with the found entity
+            const trackTrain = new CTrackTrain(trainEntity);
+            // 2. Now you can use the methods from your class
+            trackTrain.teleportToPathAndStart(spawnNode, 500); // Example speed of 500
         } else {
             Instance.Msg(`Error: Could not find train with name ${trainName} in the spawned template.`);
         }
     }
 }
 
-var mapEntities = new MapEntities();
+/*
+* Singleton/Global
+*/
+var g_mapEntities = new CMapEntities();
 
 
 // Map chat commands to their corresponding entity templates
 const commandToTemplate = new Map<string, PointTemplate | undefined>([
-    ["!flower", mapEntities.flowerTemplate],
-    ["!liter", mapEntities.literTemplate],
-    ["!gallon", mapEntities.gallonTemplate],
-    ["!statue", mapEntities.statueTemplate],
-    ["!vase", mapEntities.vaseTemplate],
-    ["!door", mapEntities.doorTemplate]
+    ["!flower", g_mapEntities.m_flowerTemplate],
+    ["!liter", g_mapEntities.m_literTemplate],
+    ["!gallon", g_mapEntities.m_gallonTemplate],
+    ["!statue", g_mapEntities.m_statueTemplate],
+    ["!vase", g_mapEntities.m_vaseTemplate],
+    ["!door", g_mapEntities.m_doorTemplate]
 ]);
 
 
@@ -115,7 +172,7 @@ Instance.ServerCommand("mp_buy_anywhere 1");
 // Handle player chat commands
 Instance.OnPlayerChat(({ player, text }: { player: CSPlayerController | undefined; text: string; }) => {
     if (!player) return;
-    const pathA = mapEntities.ctPaths.get('a')!;
+    const pathA = g_mapEntities.m_ctPaths.get('a')!;
     const spawnNode = pathA[0];
     const name = text.substring(1);
     const template = commandToTemplate.get(text);
