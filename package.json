@@ -1,11 +1,17 @@
 {
   "name": "globaldefensive",
   "version": "1.0.0",
+  "description": "Tower Defense Gamemode for CS2",
+  "main": "index.js",
   "scripts": {
-    "build": "tsc",
-    "watch": "tsc --watch"
+    "build": "esbuild src/index.ts --bundle --outfile=scripts/bundle.js --external:cs_script/point_script --format=esm --minify",
+    "watch": "esbuild src/index.ts --bundle --outfile=scripts/bundle.js --external:cs_script/point_script --format=esm --minify --watch"
   },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
+    "esbuild": "^0.20.2",
     "typescript": "^5.4.5"
   }
 }

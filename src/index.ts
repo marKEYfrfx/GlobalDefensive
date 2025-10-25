@@ -1,4 +1,5 @@
 import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController, Vector, QAngle, Entity, EntityDamage } from "cs_script/point_script";
+import { CFuncTrackTrain, CPropPhysicsMultiplayer } from "./HammerEntities";
 
 // An enum to define the current phase of the game
 export enum GamePhase {
@@ -24,47 +25,11 @@ export enum TroopType {
     e_FLOWER = "FLOWER",
 }
 
-
-export class CTrackTrain {
-    // A property to hold the actual entity handle from the game engine
-    private m_entityHandle: Entity;
-
-    constructor(entity: Entity) {
-        this.m_entityHandle = entity;
-    }
-
-    /**
-     * Teleports the train to a path node and starts it moving at a specified speed.
-     */
-    public teleportToPathAndStart(teleportToNode: Entity, speedValue: number): void {
-        const pathNodeName = teleportToNode.GetEntityName();
-        Instance.EntFireAtTarget({ target: this.m_entityHandle, input: "TeleportToPathNode", value: pathNodeName });
-        this.setSpeed(speedValue);
-        Instance.EntFireAtTarget({ target: this.m_entityHandle, input: "StartForward" });
-    }
-
-    /**
-     * Sets the speed of the train.
-     */
-    public setSpeed(speedValue: number): void {
-        Instance.EntFireAtTarget({ target: this.m_entityHandle, input: "SetSpeedReal", value: speedValue });
-    }
-}
-
-export class CPropPhysicsMultiplayer {
-    // A property to hold the actual entity handle from the game engine
-    private m_entityHandle: Entity;
-
-    constructor(entity: Entity) {
-        this.m_entityHandle = entity;
-    }
-}
-
 export class CTroop {
-    private m_trackTrain: CTrackTrain;
+    private m_trackTrain: CFuncTrackTrain;
     private m_propPhysicsMultiplayer: CPropPhysicsMultiplayer;
 
-    constructor(trackTrain: CTrackTrain, propPhysicsMultiplayer: CPropPhysicsMultiplayer) {
+    constructor(trackTrain: CFuncTrackTrain, propPhysicsMultiplayer: CPropPhysicsMultiplayer) {
         this.m_propPhysicsMultiplayer = propPhysicsMultiplayer;
         this.m_trackTrain = trackTrain;
     }
@@ -135,11 +100,15 @@ function spawnEntityAt(template: PointTemplate, spawnNode: Entity, name: string)
     if (spawnedEntities) {
         const trainName = `train.${name}`;
         const trainEntity = spawnedEntities.find(e => e.GetEntityName() === trainName);
+
         if (trainEntity) {
-            // 1. Create a new instance of your wrapper class with the found entity
-            const trackTrain = new CTrackTrain(trainEntity);
-            // 2. Now you can use the methods from your class
-            trackTrain.teleportToPathAndStart(spawnNode, 500); // Example speed of 500
+            // **FIX:** Change the prototype of the engine entity to our custom class prototype.
+            // This makes the engine's entity object behave like an instance of CFuncTrackTrain.
+            Object.setPrototypeOf(trainEntity, CFuncTrackTrain.prototype);
+
+            // Now we can safely cast and use our custom methods.
+            const train = trainEntity as CFuncTrackTrain;
+            train.teleportToPathAndStart(spawnNode, 500); // Example speed of 500
         } else {
             Instance.Msg(`Error: Could not find train with name ${trainName} in the spawned template.`);
         }
