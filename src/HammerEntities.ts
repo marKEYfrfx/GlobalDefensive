@@ -5,7 +5,7 @@ export class CFuncTrackTrain extends Entity{
     /**
      * Teleports the train to a path node and starts it moving at a specified speed.
      */
-    public teleportToPathAndStart(teleportToNode: Entity, speedValue: number): void {
+    public teleportToPathAndStart(teleportToNode: CPathTrack, speedValue: number): void {
         const pathNodeName = teleportToNode.GetEntityName();
         Instance.EntFireAtTarget({ target: this, input: "TeleportToPathNode", value: pathNodeName });
         this.setSpeed(speedValue);
@@ -21,5 +21,9 @@ export class CFuncTrackTrain extends Entity{
 }
 
 export class CPropPhysicsMultiplayer extends BaseModelEntity {
+    
+}
+
+export class CPathTrack extends Entity {
     
 }
