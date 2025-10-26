@@ -1,5 +1,6 @@
 import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController, Vector, QAngle, Entity, EntityDamage } from "cs_script/point_script";
 import { CFuncTrackTrain, CPathTrack, CPropPhysicsMultiplayer } from "./HammerEntities";
+import { CTroop } from "./CTroop";
 
 
 const TEMPLATE_TROOP_DOOR: string = "template.troop.door";
