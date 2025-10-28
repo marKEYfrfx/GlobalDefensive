@@ -1,6 +1,8 @@
 import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController} from "cs_script/point_script";
 import { CGameEntities } from "./CGameEntities";
 import { CTroop } from "./CTroop";
+import { CDebugMenu } from "./CDebugMenu";
+import { kzExecCommands } from "./CKZExec";
 
 // An enum to define the current phase of the game
 export enum GamePhase {
@@ -24,8 +26,15 @@ const TEAM_CT = 3;
 * Singleton/Global
 */
 var g_mapEntities = new CGameEntities();
+var g_debugMenu = new CDebugMenu();
+kzExecCommands();
 
-// Map chat commands to their corresponding entity templates
+Instance.SetThink(() => {
+    g_debugMenu.textDisplay();
+    Instance.SetNextThink(Instance.GetGameTime() + 0.25);
+});
+
+// Map chat commands to their corresponding entity templates    
 const commandToTemplate = new Map<string, PointTemplate | undefined>([
     ["!flower", g_mapEntities.m_flowerTemplate],
     ["!liter", g_mapEntities.m_literTemplate],
