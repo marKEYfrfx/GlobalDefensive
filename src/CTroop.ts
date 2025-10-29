@@ -1,5 +1,6 @@
 import { Instance, CSPlayerPawn, PointTemplate, CSPlayerController, Vector, QAngle, Entity, EntityDamage } from "cs_script/point_script";
 import { CFuncTrackTrain, CPathTrack, CPropPhysicsMultiplayer } from "./HammerEntities";
+import { IDebuggable } from "./CDebugMenu";
 
 export enum TroopType {
     e_DOOR = "DOOR",
@@ -10,7 +11,7 @@ export enum TroopType {
     e_FLOWER = "FLOWER",
 }
 
-export class CTroop {
+export class CTroop implements IDebuggable {
     private m_troopType: TroopType;
     private m_trackTrain: CFuncTrackTrain;
     private m_propPhysicsMultiplayer: CPropPhysicsMultiplayer;
@@ -83,5 +84,30 @@ export class CTroop {
      */
     public SpawnAt(spawnNode: CPathTrack): void {
         this.m_trackTrain.teleportToPathAndStart(spawnNode, 500);
+    }
+
+    /**
+     * The title for the entire column.
+     */
+    debugColumnTitle(): string {
+        return "CTroop";
+    };
+
+    /**
+     * The name for the specific entity/row.
+     */
+    debugEntityName(): string {
+        return this.getTroopType();
+    };
+    
+    /**
+     * The current value to display for the entity/row.
+     */
+    debugCurrentValue(): string {
+        if (this.m_propPhysicsMultiplayer) {
+            return "alive";
+        } else {
+            return "dead";
+        }
     }
 }

@@ -44,7 +44,7 @@ export class CPropPhysicsMultiplayer extends BaseModelEntity implements IDebugga
      * The current value to display for the entity/row.
      */
     debugCurrentValue(): string {
-        return "0";
+        return this.GetHealth().toString();
     };
 }
 

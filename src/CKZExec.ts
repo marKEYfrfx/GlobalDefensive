@@ -24,4 +24,5 @@ export function kzExecCommands() {
     Instance.ServerCommand("sv_gravity 800.000000");
     Instance.ServerCommand("sv_standable_normal 0.700000");
     Instance.ServerCommand("sv_wateraccelerate 10.000000");
+    Instance.ServerCommand("sv_disable_radar 1");
 }

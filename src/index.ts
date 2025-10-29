@@ -28,11 +28,15 @@ const TEAM_CT = 3;
 var g_mapEntities = new CGameEntities();
 var g_debugMenu = new CDebugMenu();
 kzExecCommands();
+g_debugMenu.addColumn(g_mapEntities.m_attackingCT);
+g_debugMenu.addColumn(g_mapEntities.m_attackingT);
 
 Instance.SetThink(() => {
-    g_debugMenu.textDisplay();
-    Instance.SetNextThink(Instance.GetGameTime() + 0.25);
+    g_debugMenu.displayGameTime();
+    g_debugMenu.displayColumns();
+    Instance.SetNextThink(Instance.GetGameTime() + 0.125);
 });
+Instance.SetNextThink(Instance.GetGameTime());
 
 // Map chat commands to their corresponding entity templates    
 const commandToTemplate = new Map<string, PointTemplate | undefined>([
