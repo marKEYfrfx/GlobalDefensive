@@ -15,6 +15,8 @@ export class CTroop implements IDebuggable {
     private m_troopType: TroopType;
     private m_trackTrain: CFuncTrackTrain;
     private m_propPhysicsMultiplayer: CPropPhysicsMultiplayer;
+    private m_currentHealth: number = 0;
+    private m_healthConnectionId: number | undefined;
 
     /**
      * Constructs a CTroop object, which spawns and manages a troop entity.
@@ -63,11 +65,25 @@ export class CTroop implements IDebuggable {
         if (propEntity) {
             Object.setPrototypeOf(propEntity, CPropPhysicsMultiplayer.prototype);
             this.m_propPhysicsMultiplayer = propEntity as CPropPhysicsMultiplayer;
+            
+            // Connect to the OnHealthChanged output to track health changes
+            this.m_healthConnectionId = Instance.ConnectOutput(
+                this.m_propPhysicsMultiplayer,
+                "OnHealthChanged",
+                (inputData) => {
+                    // The value parameter contains the new health value
+                    if (typeof inputData.value === 'number') {
+                        this.m_currentHealth = inputData.value;
+                        Instance.Msg(`[CTroop ${this.m_troopType}] Health changed to: ${this.m_currentHealth}`);
+                    }
+                }
+            );
         } else {
             const errorMsg = `Could not find prop with base name ${propNameBase} in the spawned template.`;
             Instance.Msg(errorMsg);
             throw new Error(errorMsg);
         }
+
     }
 
     /**
@@ -76,6 +92,26 @@ export class CTroop implements IDebuggable {
      */
     public getTroopType(): TroopType {
         return this.m_troopType;
+    }
+
+    /**
+     * Gets the current health of the prop_physics_multiplayer entity.
+     * This value is updated via the OnHealthChanged output.
+     * @returns The current health value.
+     */
+    public getCurrentHealth(): number {
+        return this.m_currentHealth;
+    }
+
+    /**
+     * Cleans up the troop by disconnecting output listeners.
+     * Call this when you're done with the troop to prevent memory leaks.
+     */
+    public destroy(): void {
+        if (this.m_healthConnectionId !== undefined) {
+            Instance.DisconnectOutput(this.m_healthConnectionId);
+            this.m_healthConnectionId = undefined;
+        }
     }
 
     /**
@@ -104,10 +140,6 @@ export class CTroop implements IDebuggable {
      * The current value to display for the entity/row.
      */
     debugCurrentValue(): string {
-        if (this.m_propPhysicsMultiplayer) {
-            return "alive";
-        } else {
-            return "dead";
-        }
+        return `Health: ${this.m_currentHealth}`;
     }
 }

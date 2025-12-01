@@ -21,7 +21,7 @@ export class CFuncTrackTrain extends Entity{
     }
 }
 
-export class CPropPhysicsMultiplayer extends BaseModelEntity implements IDebuggable {
+export class CPropPhysicsMultiplayer extends Entity implements IDebuggable {
     
     public ignite(): void {
 
