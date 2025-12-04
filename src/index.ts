@@ -28,8 +28,8 @@ const TEAM_CT = 3;
 var g_mapEntities = new CGameEntities();
 var g_debugMenu = new CDebugMenu();
 kzExecCommands();
-g_debugMenu.addColumn(g_mapEntities.m_attackingCT);
 g_debugMenu.addColumn(g_mapEntities.m_attackingT);
+g_debugMenu.addColumn(g_mapEntities.m_attackingCT);
 
 Instance.SetThink(() => {
     g_debugMenu.displayGameTime();
@@ -62,7 +62,6 @@ Instance.OnPlayerChat(({ player, text }: { player: CSPlayerController | undefine
     let spawnPaths;
     let attackingArray;
 
-    // A player spawns a troop ON THE OPPONENT'S PATH to send a "creep" against them.
     if (playerTeam === TEAM_CT) {
         spawnPaths = g_mapEntities.m_tPaths;
         attackingArray = g_mapEntities.m_attackingT;
@@ -87,10 +86,8 @@ Instance.OnPlayerChat(({ player, text }: { player: CSPlayerController | undefine
     if (template) {
         try {
             // Create a new troop from the template, which also spawns its entities.
-            const troop = new CTroop(template);
-            // Start the troop moving along the path.
-            troop.SpawnAt(spawnNode);
-            attackingArray.push(troop); // Keep track of the active troop
+            const troop = new CTroop(template, spawnNode);
+            attackingArray.addTroop(troop); // Keep track of the active troop
 
             Instance.Msg(`${troop.getTroopType().toLowerCase()} spawned at the opposing team's track and is now moving.`);
         } catch (error) {

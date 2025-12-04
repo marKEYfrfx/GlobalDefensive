@@ -17,8 +17,23 @@ export interface IDebuggable {
     debugCurrentValue(): string;
 }
 
+/**
+ * Interface for objects that can provide a debug column.
+ */
+export interface IDebugColumn {
+    /**
+     * Returns the title for this column.
+     */
+    getDebugColumnTitle(): string;
+    
+    /**
+     * Returns an array of IDebuggable items to display as rows.
+     */
+    getDebugItems(): IDebuggable[];
+}
+
 export class CDebugMenu {
-    private columns: IDebuggable[][] = [];
+    private columns: (IDebuggable[] | IDebugColumn)[] = [];
 
     constructor() {
     }
@@ -47,22 +62,32 @@ export class CDebugMenu {
 
         // 1. First Pass: Calculate the maximum width needed for each column
         for (const column of this.columns) {
-            if (column.length === 0) {
-                columnTitles.push("");
-                columnWidths.push(0);
-                continue;
+            // Check if this is an IDebugColumn or an array
+            let items: IDebuggable[];
+            let title: string;
+            
+            if (Array.isArray(column)) {
+                items = column;
+                if (items.length === 0) {
+                    columnTitles.push("");
+                    columnWidths.push(0);
+                    continue;
+                }
+                title = items[0].debugColumnTitle();
+            } else {
+                // It's an IDebugColumn
+                items = column.getDebugItems();
+                title = column.getDebugColumnTitle();
             }
 
-            // Get title from the first item and update max rows
-            const title = column[0].debugColumnTitle();
             columnTitles.push(title);
-            maxRows = Math.max(maxRows, column.length);
+            maxRows = Math.max(maxRows, items.length);
 
             // The width must be at least the length of the title
             let maxWidth = title.length;
 
             // Check the length of each cell's content
-            for (const item of column) {
+            for (const item of items) {
                 const cellContent = `${item.debugEntityName()}: ${item.debugCurrentValue()}`;
                 maxWidth = Math.max(maxWidth, cellContent.length);
             }
@@ -92,9 +117,19 @@ export class CDebugMenu {
             let rowLine = "|";
             for (let c = 0; c < this.columns.length; c++) {
                 let cellContent = "";
+                const column = this.columns[c];
+                
+                // Get items from either array or IDebugColumn
+                let items: IDebuggable[];
+                if (Array.isArray(column)) {
+                    items = column;
+                } else {
+                    items = column.getDebugItems();
+                }
+                
                 // Check if a cell exists at this row/column
-                if (this.columns[c] && this.columns[c][r]) {
-                    const item = this.columns[c][r];
+                if (items && items[r]) {
+                    const item = items[r];
                     cellContent = `${item.debugEntityName()}: ${item.debugCurrentValue()}`;
                 }
                 rowLine += `${pad(cellContent, columnWidths[c])}|`;
@@ -117,9 +152,9 @@ export class CDebugMenu {
 
     /**
      * Adds a new column to be displayed in the debug menu.
-     * @param debugColumn An array of objects that implement the IDebuggable interface.
+     * @param debugColumn An array of IDebuggable objects or a single IDebugColumn object.
      */
-    public addColumn(debugColumn: IDebuggable[]) {
+    public addColumn(debugColumn: IDebuggable[] | IDebugColumn) {
         this.columns.push(debugColumn);
     }
 

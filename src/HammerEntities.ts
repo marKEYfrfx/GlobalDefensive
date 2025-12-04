@@ -1,6 +1,4 @@
 import { Instance, Entity, BaseModelEntity} from "cs_script/point_script";
-import { IDebuggable } from "./CDebugMenu";
-
 
 export class CFuncTrackTrain extends Entity{
     /**
@@ -21,31 +19,24 @@ export class CFuncTrackTrain extends Entity{
     }
 }
 
-export class CPropPhysicsMultiplayer extends Entity implements IDebuggable {
-    
-    public ignite(): void {
-
+export class CPropPhysicsMultiplayer extends Entity {
+    /**
+     * Subscribes to health changes on this prop.
+     * @param callback Function to call when health changes. Receives the new health value.
+     * @returns The connection ID that can be used to disconnect the output later, or undefined if failed.
+     */
+    public subscribeToHealthChanges(callback: (newHealth: number) => void): number | undefined {
+        return Instance.ConnectOutput(
+            this,
+            "OnHealthChanged",
+            (inputData) => {
+                // The value parameter contains the new health value
+                if (typeof inputData.value === 'number') {
+                    callback(inputData.value);
+                }
+            }
+        );
     }
-    /**
-     * The title for the entire column.
-     */
-    debugColumnTitle(): string {
-        return "prop_physics_multiplayer";
-    };
-
-    /**
-     * The name for the specific entity/row.
-     */
-    debugEntityName(): string {
-        return this.GetEntityName();
-    };
-
-    /**
-     * The current value to display for the entity/row.
-     */
-    debugCurrentValue(): string {
-        return this.GetHealth().toString();
-    };
 }
 
 export class CPathTrack extends Entity {
